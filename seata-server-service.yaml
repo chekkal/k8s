@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seata-server
+  namespace: seata-cluster
+spec:
+  type: NodePort
+  selector:
+    io.kompose.service: seata-server
+  ports:
+    - port: 8091
+      targetPort: 8091
+      nodePort: 30091  # must be in 30000–32767
+

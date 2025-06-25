@@ -1,0 +1,72 @@
+apiVersion: v1
+data:
+  logback-spring.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration scan="false" debug="false">
+
+        <!-- Register Seata context listener -->
+        <contextListener class="org.apache.seata.server.logging.listener.SystemPropertyLoggerContextListener"/>
+
+        <!-- Log format conversion rules -->
+        <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+        <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+        <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+        <conversionRule conversionWord="wEx2" converterClass="org.apache.seata.server.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+
+        <!-- Spring application properties -->
+        <springProperty name="PORT" source="server.port" defaultValue="7091"/>
+        <springProperty name="LOG_BASH_DIR" source="spring.config.additional-location" defaultValue="" />
+        <springProperty name="APPLICATION_NAME" source="spring.application.name" defaultValue="seata-server"/>
+
+        <!-- Load console and file appenders based on LOG_BASH_DIR -->
+        <if condition='property("LOG_BASH_DIR").equals("")' >
+            <then>
+                <include resource="logback/console-appender.xml"/>
+                <include resource="logback/file-appender.xml"/>
+            </then>
+            <else>
+                <include file="${LOG_BASH_DIR}/logback/console-appender.xml"/>
+                <include file="${LOG_BASH_DIR}/logback/file-appender.xml"/>
+            </else>
+        </if>
+
+        <!-- Async appenders -->
+        <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="CONSOLE"/>
+            <includeCallerData>true</includeCallerData>
+            <discardingThreshold>0</discardingThreshold>
+            <queueSize>2048</queueSize>
+            <neverBlock>true</neverBlock>
+        </appender>
+
+        <appender name="ASYNC_FILE_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="FILE_ERROR"/>
+            <includeCallerData>true</includeCallerData>
+            <discardingThreshold>0</discardingThreshold>
+            <queueSize>1024</queueSize>
+            <neverBlock>true</neverBlock>
+        </appender>
+
+        <!-- Set Seata loggers to ERROR only -->
+        <logger name="io.seata" level="ERROR"/>
+        <logger name="org.apache.seata" level="ERROR"/>
+
+        <!-- Optional: silence Spring Security logs -->
+        <logger name="org.springframework.security.config.annotation.web.builders.WebSecurity" level="ERROR"/>
+        <logger name="org.springframework.security.web.DefaultSecurityFilterChain" level="ERROR"/>
+
+        <!-- Only log ERRORs globally -->
+        <root level="ERROR">
+            <appender-ref ref="ASYNC_CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE_ERROR"/>
+        </root>
+
+    </configuration>
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: seata-server
+  name: seata-server-cm1
+  namespace: seata-cluster

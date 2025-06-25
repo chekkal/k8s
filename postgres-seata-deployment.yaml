@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yaml
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: postgres-seata
+  name: postgres-seata
+  namespace: seata-cluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: postgres-seata
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yaml
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: postgres-seata
+    spec:
+      containers:
+        - args:
+            - postgres
+            - -c
+            - max_connections=1000
+            - -c
+            - shared_buffers=512MB
+            - -c
+            - effective_cache_size=1GB
+            - -c
+            - wal_level=replica
+          env:
+            - name: POSTGRES_DB
+              value: seata
+            - name: POSTGRES_PASSWORD
+              value: seata
+            - name: POSTGRES_USER
+              value: seata
+          image: postgres:15
+          name: postgres-seata
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d
+              name: postgres-seata-cm0
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            name: postgres-seata-cm0
+          name: postgres-seata-cm0

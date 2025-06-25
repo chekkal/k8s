@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yaml
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: seata-server
+  name: seata-server
+  namespace: seata-cluster
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      io.kompose.service: seata-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yaml
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: seata-server
+    spec:
+      containers:
+        - env:
+            - name: JVM_XMS
+              value: 1024m
+            - name: JVM_XMX
+              value: 2048m
+            - name: JVM_XSS
+              value: 512k
+            - name: SEATA_CONFIG_NAME
+              value: file:/seata-server/resources/application.yml
+            - name: SEATA_PORT
+              value: "8091"
+          image: apache/seata-server:2.2.0
+          name: seata-server
+          ports:
+            - containerPort: 7091
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /seata-server/resources/application.yml
+              name: seata-server-cm0
+              subPath: application.yml
+            - mountPath: /seata-server/resources/logback-spring.xml
+              name: seata-server-cm1
+              subPath: logback-spring.xml
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: application.yml
+                path: application.yml
+            name: seata-server-cm0
+          name: seata-server-cm0
+        - configMap:
+            items:
+              - key: logback-spring.xml
+                path: logback-spring.xml
+            name: seata-server-cm1
+          name: seata-server-cm1
