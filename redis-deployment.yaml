@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: seata-cluster
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        args:
+        - redis-server
+        - --maxmemory
+        - "3gb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        - --maxclients
+        - "10000"
+        - --tcp-keepalive
+        - "300"
+        - --timeout
+        - "0"
+        - --tcp-backlog
+        - "2048"
+        - --databases
+        - "1"
+        - --appendonly
+        - "yes"
+        - --appendfsync
+        - "everysec"
+        - --save
+        - ""
+        - --stop-writes-on-bgsave-error
+        - "no"
+        - --rdbcompression
+        - "no"
+        - --rdbchecksum
+        - "no"
+        - --lazyfree-lazy-eviction
+        - "yes"
+        - --lazyfree-lazy-expire
+        - "yes"
+        - --lazyfree-lazy-server-del
+        - "yes"
+        - --replica-lazy-flush
+        - "yes"
+        - --repl-diskless-sync
+        - "yes"
+        - --repl-diskless-sync-delay
+        - "5"
+        - --io-threads
+        - "4"
+        - --io-threads-do-reads
+        - "yes"
+        - --activedefrag
+        - "yes"
+        - --active-defrag-threshold-lower
+        - "10"
+        - --active-defrag-threshold-upper
+        - "100"
+        - --active-defrag-ignore-bytes
+        - "64mb"
+        - --active-defrag-cycle-min
+        - "25"
+        - --active-defrag-cycle-max
+        - "75"
+        resources:
+          requests:
+            memory: "3584Mi"
+            cpu: "2000m"
+          limits:
+            memory: "4096Mi"
+            cpu: "4000m"
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: seata-cluster
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: seata-cluster
+  labels:
+    app: redis
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  type: ClusterIP

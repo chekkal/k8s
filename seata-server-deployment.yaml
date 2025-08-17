@@ -26,11 +26,13 @@ spec:
       containers:
         - env:
             - name: JVM_XMS
-              value: 1024m
+              value: 728m
             - name: JVM_XMX
-              value: 2048m
+              value: 784m
             - name: JVM_XSS
               value: 512k
+            - name: JVM_OPTS
+              value: "-XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseCGroupMemoryLimitForHeap -XX:NewRatio=2 -server"
             - name: SEATA_CONFIG_NAME
               value: file:/seata-server/resources/application.yml
             - name: SEATA_PORT
@@ -40,6 +42,15 @@ spec:
           ports:
             - containerPort: 7091
               protocol: TCP
+            - containerPort: 8091
+              protocol: TCP
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1024Mi"
+              cpu: "500m"
           volumeMounts:
             - mountPath: /seata-server/resources/application.yml
               name: seata-server-cm0

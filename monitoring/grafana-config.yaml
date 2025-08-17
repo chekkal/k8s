@@ -1,0 +1,200 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus:9090
+      access: proxy
+      isDefault: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: monitoring
+data:
+  dashboard.yaml: |
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 10
+      allowUiUpdates: true
+      options:
+        path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  seata-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Seata Server Monitoring",
+        "tags": ["seata"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Seata Global Transactions",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "seata_global_transaction_total",
+                "legendFormat": "Total Transactions"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Active Global Transactions",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "seata_global_transaction_active",
+                "legendFormat": "Active Transactions"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Seata Transaction Status",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "seata_global_transaction_committed_total",
+                "legendFormat": "Committed"
+              },
+              {
+                "expr": "seata_global_transaction_rollbacked_total",
+                "legendFormat": "Rollbacked"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "JVM Memory Usage",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "jvm_memory_used_bytes{job=\"seata-server\"}",
+                "legendFormat": "Used - {{area}}"
+              },
+              {
+                "expr": "jvm_memory_max_bytes{job=\"seata-server\"}",
+                "legendFormat": "Max - {{area}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ],
+        "time": {"from": "now-1h", "to": "now"},
+        "refresh": "5s"
+      }
+    }
+  redis-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Redis Monitoring",
+        "tags": ["redis"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Redis Connected Clients",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "redis_connected_clients",
+                "legendFormat": "Connected Clients"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Redis Memory Usage",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "redis_memory_used_bytes",
+                "legendFormat": "Memory Used (Bytes)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Redis Operations/sec",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(redis_commands_processed_total[5m])",
+                "legendFormat": "Operations/sec"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0}
+          },
+          {
+            "id": 4,
+            "title": "Redis Commands Over Time",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(redis_commands_processed_total[5m])",
+                "legendFormat": "Commands/sec"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Redis Memory Usage Over Time",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "redis_memory_used_bytes",
+                "legendFormat": "Memory Used"
+              },
+              {
+                "expr": "redis_memory_max_bytes",
+                "legendFormat": "Memory Max"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 6,
+            "title": "Redis Key Statistics",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "redis_db_keys",
+                "legendFormat": "Keys in DB{{db}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ],
+        "time": {"from": "now-1h", "to": "now"},
+        "refresh": "5s"
+      }
+    }

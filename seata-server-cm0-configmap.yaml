@@ -1,6 +1,75 @@
 apiVersion: v1
 data:
-  application.yml: "server:\n  port: 7091\n  maxSession: 5000\n\nspring:\n  application:\n    name: seata-server\n\nlogging:\n  config: classpath:logback-spring.xml\n  file:\n    path: ${log.home:${user.home}/logs/seata}\n  extend:\n    logstash-appender:\n      destination: 127.0.0.1:4560\n    kafka-appender:\n      bootstrap-servers: 127.0.0.1:9092\n      topic: logback_to_logstash\n\nconsole:\n  user:\n    username: seata\n    password: seata\nseata:\n  config:\n    # support: nacos, consul, apollo, zk, etcd3\n    type: file\n  registry:\n    type: file\n    consul:\n      server-addr: http://consul-1:8500\n      cluster: seata-server\n      service-name: seata-server\n      register: true\n  store:\n    # support: file 、 db 、 redis 、 raft\n    mode: db\n    db:\n      vgroup-table: vgroup_table\n      datasource: druid # Corresponds to store.db.datasource\n      db-type: postgresql # Changed from mysql to postgresql\n      driver-class-name: org.postgresql.Driver # PostgreSQL driver\n      url: jdbc:postgresql://postgres-seata:5432/seata # Use service name and correct port/db name\n      user: seata # User from docker-compose environment\n      password: seata # Password from docker-compose environment\n      min-conn: 100 # Corresponds to store.db.minConn\n      max-conn: 600 # Corresponds to store.db.maxConn\n      global-table: global_table # Corresponds to store.db.globalTable\n      branch-table: branch_table # Corresponds to store.db.branchTable\n      lock-table: lock_table # Corresponds to store.db.lockTable\n      distributed-lock-table: distributed_lock # Corresponds to store.db.distributedLockTable\n      query-limit: 2000 # Corresponds to store.db.queryLimit\n      max-wait: 1000 # Corresponds to store.db.maxWait\n      # Druid specific configurations (since datasource=druid)\n      druid:\n        time-between-eviction-runs-millis: 120000\n        min-evictable-idle-time-millis: 300000\n        test-while-idle: true\n        test-on-borrow: false\n        keep-alive: false\n  #  server:\n  #    service-port: 8091 #If not configured, the default is '${server.port} + 1000'\n  security:\n    secretKey: SeataSecretKey0c382ef121d778043159209298fd40bf3850a017\n    tokenValidityInMilliseconds: 1800000\n    csrf-ignore-urls: /metadata/v1/**\n    ignore:\n      urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.jpeg,/**/*.ico,/api/v1/auth/login,/version.json,/health,/error,/vgroup/v1/** \n"
+  application.yml: |
+    server:
+      port: 7091
+      maxSession: 10000
+      netty:
+        boss-thread-prefix: NettyBoss
+        worker-thread-prefix: NettyServerNIOWorker
+        server-worker-threads: 8
+        boss-thread-size: 2
+        max-connections: 10000
+        write-buffer-high-water-mark: 67108864
+        write-buffer-low-water-mark: 33554432
+
+    spring:
+      application:
+        name: seata-server
+
+    logging:
+      config: classpath:logback-spring.xml
+      file:
+        path: ${log.home:${user.home}/logs/seata}
+      extend:
+        logstash-appender:
+          destination: 127.0.0.1:4560
+        kafka-appender:
+          bootstrap-servers: 127.0.0.1:9092
+          topic: logback_to_logstash
+
+    console:
+      user:
+        username: seata
+        password: seata
+
+    seata:
+      config:
+        type: file
+      registry:
+        type: file
+      store:
+        mode: redis
+        redis:
+          mode: single
+          single:
+            host: redis
+            port: 6379
+          password: ""
+          database: 0
+          min-conn: 20
+          max-conn: 1000
+          max-total: 1000
+          query-limit: 5000
+          max-idle: 50
+          min-idle: 10
+          max-wait: 3000
+      server:
+        service-port: 8091
+        max-commit-retry-timeout: 10000
+        max-rollback-retry-timeout: 10000
+        rollback-retry-timeout-unlock-enable: false
+        distributed-lock-expire-time: 10000
+        xid-expire-time: 10000
+        default-global-transaction-timeout: 60000
+        enable-check-auth: true
+        retry-dead-threshold: 130000
+      security:
+        secretKey: SeataSecretKey0c382ef121d778043159209298fd40bf3850a017
+        tokenValidityInMilliseconds: 1800000
+        csrf-ignore-urls: /metadata/v1/**
+        ignore:
+          urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.jpeg,/**/*.ico,/api/v1/auth/login,/version.json,/health,/error,/vgroup/v1/**
 kind: ConfigMap
 metadata:
   annotations:

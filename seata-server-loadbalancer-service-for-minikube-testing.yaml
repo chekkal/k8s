@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seata-server-lb-4-minikube-testing
+  # Have to run minikube tunnel
+  namespace: seata-cluster
+spec:
+  type: LoadBalancer
+  selector:
+    io.kompose.service: seata-server
+  ports:
+    - port: 8091
+      targetPort: 8091
+
