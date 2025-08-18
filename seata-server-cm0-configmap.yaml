@@ -3,13 +3,13 @@ data:
   application.yml: |
     server:
       port: 7091
-      maxSession: 10000
+      maxSession: 20000
       netty:
         boss-thread-prefix: NettyBoss
         worker-thread-prefix: NettyServerNIOWorker
-        server-worker-threads: 8
-        boss-thread-size: 2
-        max-connections: 10000
+        server-worker-threads: 16
+        boss-thread-size: 4
+        max-connections: 20000
         write-buffer-high-water-mark: 67108864
         write-buffer-low-water-mark: 33554432
 
@@ -47,13 +47,13 @@ data:
             port: 6379
           password: ""
           database: 0
-          min-conn: 20
-          max-conn: 1000
-          max-total: 1000
-          query-limit: 5000
-          max-idle: 50
-          min-idle: 10
-          max-wait: 3000
+          min-conn: 50
+          max-conn: 2000
+          max-total: 2000
+          query-limit: 10000
+          max-idle: 100
+          min-idle: 25
+          max-wait: 1000
       server:
         service-port: 8091
         max-commit-retry-timeout: 10000

@@ -9,7 +9,7 @@ metadata:
   name: seata-server
   namespace: seata-cluster
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       io.kompose.service: seata-server
@@ -26,9 +26,9 @@ spec:
       containers:
         - env:
             - name: JVM_XMS
-              value: 728m
+              value: 2560m
             - name: JVM_XMX
-              value: 784m
+              value: 2560m
             - name: JVM_XSS
               value: 512k
             - name: JVM_OPTS
@@ -46,11 +46,11 @@ spec:
               protocol: TCP
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "200m"
-            limits:
               memory: "1024Mi"
-              cpu: "500m"
+              cpu: "800m"
+            limits:
+              memory: "3072Mi"
+              cpu: "2000m"
           volumeMounts:
             - mountPath: /seata-server/resources/application.yml
               name: seata-server-cm0
